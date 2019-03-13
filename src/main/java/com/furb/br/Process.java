@@ -1,3 +1,4 @@
+package com.furb.br;
 public class Process {
 
 	private int id;
