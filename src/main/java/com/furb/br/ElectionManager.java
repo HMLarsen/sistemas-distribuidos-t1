@@ -1,23 +1,26 @@
 package com.furb.br;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import lombok.Getter;
 
 public class ElectionManager {
 
-	private final Logger LOGGER = Logger.getLogger(ElectionManager.class.getName());
 	private static ElectionManager INSTANCE;
-	@Getter private List<Node> nodes = new ArrayList<>();
-	@Getter private Node coordinator;
-	@Getter public boolean isInElection;
+	@Getter
+	private List<Node> nodes = new ArrayList<>();
+	@Getter
+	private Node coordinator;
+	@Getter
+	public boolean isInElection;
 
 	// Private default constructor for a singleton instance
-	private ElectionManager() {}
+	private ElectionManager() {
+	}
 
 	public static ElectionManager getInstance() {
 		return INSTANCE == null ? INSTANCE = new ElectionManager() : INSTANCE;
@@ -27,20 +30,24 @@ public class ElectionManager {
 	 * Create and add a new Process to the list
 	 */
 	public void createProcess() {
-		LOGGER.log(Level.INFO, "--- createProcess ---");
+		System.out.println("createProcess");
 		var node = new Node();
-		addCoordinatorIfFirst(node);
+		if (addCoordinatorIfFirst(node))
+			System.out.println(String.format("[%s] Processo %s virou coordenador.", LocalDateTime.now(), node));
+		
 		nodes.add(node);
+		System.out.println(String.format("[%s] Processo %s criado.", LocalDateTime.now(), node));
 	}
 
 	/**
 	 * Invoke some process to make a request to its coordinator
 	 */
 	public void invokeRequestCoordinator() {
-		LOGGER.log(Level.INFO, "--- invokeRequestCoordinator ---");
-		int randomIndex = getRandomIndex();
+		System.out.println("invokeRequestCoordinator");
+		int randomIndex = getNormalProcessRandomIndex();
 		if (randomIndex != -1) {
-			nodes.get(randomIndex).requestCoordinator();
+			coordinator = nodes.get(randomIndex).requestCoordinator();
+			isInElection = false;
 		}
 	}
 
@@ -49,7 +56,8 @@ public class ElectionManager {
 	 * the process, then, sets the object to null
 	 */
 	public void disableCoordinator() {
-		LOGGER.log(Level.INFO, "--- disableCoordinator ---");
+		System.out.println("disableCoordinator");
+		System.out.println(String.format("[%s] Processo %s não é mais coordenador.", LocalDateTime.now(), coordinator));
 		nodes.remove(coordinator);
 		coordinator = null;
 	}
@@ -58,18 +66,47 @@ public class ElectionManager {
 	 * Disable a random process (Cannot be the coordinator)
 	 */
 	public void disableProcess() {
-		LOGGER.log(Level.INFO, "--- disableProcess ---");
-		var index = getRandomIndex();
-		while (isCoordinator(nodes.get(index))) {
-			index = getRandomIndex();
+		System.out.println("disableProcess");
+		System.out.println(String.format("[%s] Inicio de remoção de processo do cluster.", LocalDateTime.now()));
+		var index = getNormalProcessRandomIndex();
+		if (index != -1) {
+			System.out.println(
+					String.format("[%s] Processo %s removido do cluster.", LocalDateTime.now(), nodes.get(index)));
+			nodes.remove(index);
+		} else {
+			System.out.println(String.format("[%s] Processos normais não existentes no cluster.", LocalDateTime.now()));
 		}
-		nodes.remove(index);
 	}
 
-	private void addCoordinatorIfFirst(Node node) {
+	public List<Node> getSortedList() {
+		// Copy to a new List do don't modify the original one.
+		List<Node> sortedList = new ArrayList<>(nodes);
+		sortedList.sort(Comparator.comparing(Node::getId));
+		return sortedList;
+	}
+
+	public boolean isCoordinatorDisabled() {
+		return getCoordinator() == null;
+	}
+
+	private int getNormalProcessRandomIndex() {
+		var index = getRandomIndex();
+		if (index != -1 && nodes.size() > 1) {
+			while (index != -1 && isCoordinator(nodes.get(index))) {
+				index = getRandomIndex();
+			}
+			return index;
+		} else {
+			return -1;
+		}
+	}
+
+	private boolean addCoordinatorIfFirst(Node node) {
 		if (nodes.isEmpty()) {
 			coordinator = node;
+			return true;
 		}
+		return false;
 	}
 
 	private int getRandomIndex() {
@@ -80,7 +117,7 @@ public class ElectionManager {
 	}
 
 	private boolean isCoordinator(Node node) {
-		return coordinator.equals(node) ? true : false;
+		return coordinator != null && coordinator.equals(node) ? true : false;
 	}
 
 }
