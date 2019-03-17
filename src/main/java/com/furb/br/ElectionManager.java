@@ -30,20 +30,19 @@ public class ElectionManager {
 	 * Create and add a new Process to the list
 	 */
 	public void createProcess() {
-		System.out.println("createProcess");
 		var node = new Node();
-		if (addCoordinatorIfFirst(node))
-			System.out.println(String.format("[%s] Processo %s virou coordenador.", LocalDateTime.now(), node));
-		
+		var addedCordinator = addCoordinatorIfFirst(node);
 		nodes.add(node);
 		System.out.println(String.format("[%s] Processo %s criado.", LocalDateTime.now(), node));
+
+		if (addedCordinator)
+			System.out.println(String.format("[%s] Processo %s virou coordenador.", LocalDateTime.now(), node));
 	}
 
 	/**
 	 * Invoke some process to make a request to its coordinator
 	 */
 	public void invokeRequestCoordinator() {
-		System.out.println("invokeRequestCoordinator");
 		int randomIndex = getNormalProcessRandomIndex();
 		if (randomIndex != -1) {
 			coordinator = nodes.get(randomIndex).requestCoordinator();
@@ -56,7 +55,6 @@ public class ElectionManager {
 	 * the process, then, sets the object to null
 	 */
 	public void disableCoordinator() {
-		System.out.println("disableCoordinator");
 		System.out.println(String.format("[%s] Processo %s não é mais coordenador.", LocalDateTime.now(), coordinator));
 		nodes.remove(coordinator);
 		coordinator = null;
@@ -66,7 +64,6 @@ public class ElectionManager {
 	 * Disable a random process (Cannot be the coordinator)
 	 */
 	public void disableProcess() {
-		System.out.println("disableProcess");
 		System.out.println(String.format("[%s] Inicio de remoção de processo do cluster.", LocalDateTime.now()));
 		var index = getNormalProcessRandomIndex();
 		if (index != -1) {
