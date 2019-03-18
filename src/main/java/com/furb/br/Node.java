@@ -52,6 +52,7 @@ public class Node {
 	private Node getCoordinator(Node actualNode) {
 		var aheadNodes = electionManagerInstance.getSortedList().stream().filter(n -> n.id > actualNode.id)
 				.collect(Collectors.toList());
+		// TODO: "send" a request to the others nodes, if someone responds, jump to the next node
 		if (aheadNodes.isEmpty()) {
 			return this;
 		}
