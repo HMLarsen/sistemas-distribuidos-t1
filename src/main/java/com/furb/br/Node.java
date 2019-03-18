@@ -18,7 +18,7 @@ import lombok.ToString;
 @EqualsAndHashCode(of = { "id" })
 public class Node {
 
-	private static final ElectionManager electionManagerInstance = ElectionManager.getInstance();
+	private final ElectionManager electionManagerInstance = ElectionManager.getInstance();
 	@Getter(AccessLevel.NONE)
 	@Setter(AccessLevel.NONE)
 	private final Logger LOGGER = Logger.getLogger(ElectionManager.class.getName());
@@ -28,7 +28,7 @@ public class Node {
 		System.out.println(String.format("[%s] Processo %s fez uma request ao coordenador %s.", LocalDateTime.now(),
 				this, electionManagerInstance.getCoordinator()));
 		// If the coordinator is disabled, starts an election process.
-		if (electionManagerInstance.isCoordinatorDisabled() && !electionManagerInstance.isInElection()) {
+		if (ElectionManagerUtils.isCoordinatorDisabled() && !electionManagerInstance.isInElection()) {
 			System.out.println(String.format("[%s] Coordenador não respondeu, processo de Eleição iniciado!",
 					LocalDateTime.now()));
 			Node newCoordinator = startElection();
@@ -50,7 +50,7 @@ public class Node {
 	}
 
 	private Node getCoordinator(Node actualNode) {
-		var aheadNodes = electionManagerInstance.getSortedList().stream().filter(n -> n.id > actualNode.id)
+		var aheadNodes = ElectionManagerUtils.getSortedList().stream().filter(n -> n.id > actualNode.id)
 				.collect(Collectors.toList());
 		// TODO: "send" a request to the others nodes, if someone responds, jump to the next node
 		if (aheadNodes.isEmpty()) {

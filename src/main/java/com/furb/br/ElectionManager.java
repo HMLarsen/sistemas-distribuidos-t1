@@ -2,9 +2,7 @@ package com.furb.br;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 import lombok.Getter;
 
@@ -43,7 +41,7 @@ public class ElectionManager {
 	 * Invoke some process to make a request to its coordinator
 	 */
 	public void invokeRequestCoordinator() {
-		int randomIndex = getNormalProcessRandomIndex();
+		int randomIndex = ElectionManagerUtils.getNormalProcessRandomIndex();
 		if (randomIndex != -1) {
 			coordinator = nodes.get(randomIndex).requestCoordinator();
 			isInElection = false;
@@ -52,7 +50,7 @@ public class ElectionManager {
 
 	/**
 	 * Disable the coordinator. First, the method removes the node from the list of
-	 * the process, then, sets the object to null
+	 * nodes, then, sets the object to null
 	 */
 	public void disableCoordinator() {
 		System.out.println(String.format("[%s] Processo %s não é mais coordenador.", LocalDateTime.now(), coordinator));
@@ -65,36 +63,13 @@ public class ElectionManager {
 	 */
 	public void disableProcess() {
 		System.out.println(String.format("[%s] Inicio de remoção de processo do cluster.", LocalDateTime.now()));
-		var index = getNormalProcessRandomIndex();
+		var index = ElectionManagerUtils.getNormalProcessRandomIndex();
 		if (index != -1) {
 			System.out.println(
 					String.format("[%s] Processo %s removido do cluster.", LocalDateTime.now(), nodes.get(index)));
 			nodes.remove(index);
 		} else {
-			System.out.println(String.format("[%s] Processos normais não existentes no cluster.", LocalDateTime.now()));
-		}
-	}
-
-	public List<Node> getSortedList() {
-		// Copy to a new List do don't modify the original one.
-		List<Node> sortedList = new ArrayList<>(nodes);
-		sortedList.sort(Comparator.comparing(Node::getId));
-		return sortedList;
-	}
-
-	public boolean isCoordinatorDisabled() {
-		return getCoordinator() == null;
-	}
-
-	private int getNormalProcessRandomIndex() {
-		var index = getRandomIndex();
-		if (index != -1 && nodes.size() > 1) {
-			while (index != -1 && isCoordinator(nodes.get(index))) {
-				index = getRandomIndex();
-			}
-			return index;
-		} else {
-			return -1;
+			System.out.println(String.format("[%s] Processos (não coordenadores) não existentes no cluster.", LocalDateTime.now()));
 		}
 	}
 
@@ -104,17 +79,6 @@ public class ElectionManager {
 			return true;
 		}
 		return false;
-	}
-
-	private int getRandomIndex() {
-		if (nodes.isEmpty())
-			return -1;
-		int randomNum = ThreadLocalRandom.current().nextInt(0, nodes.size());
-		return randomNum;
-	}
-
-	private boolean isCoordinator(Node node) {
-		return coordinator != null && coordinator.equals(node) ? true : false;
 	}
 
 }
