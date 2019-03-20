@@ -3,7 +3,7 @@ package com.furb.br;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.Random;
 
 /**
  * Utils class for {@link ElectionManager} singleton.
@@ -38,7 +38,7 @@ public class ElectionManagerUtils {
 	private static int getRandomIndex() {
 		if (electionManagerInstance.getNodes().isEmpty())
 			return -1;
-		int randomNum = ThreadLocalRandom.current().nextInt(0, electionManagerInstance.getNodes().size());
+		int randomNum = new Random().nextInt(electionManagerInstance.getNodes().size());
 		return randomNum;
 	}
 
