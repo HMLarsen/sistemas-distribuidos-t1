@@ -23,16 +23,17 @@ public class Node {
 	@Setter(AccessLevel.NONE)
 	private final Logger LOGGER = Logger.getLogger(ElectionManager.class.getName());
 	private int id = SequenceStore.getAndIncrement();
+	private boolean active;
 
 	public Node requestCoordinator() {
 		System.out.println(String.format("[%s] Processo %s fez uma request ao coordenador %s.", LocalDateTime.now(),
 				this, electionManagerInstance.getCoordinator()));
 		// If the coordinator is disabled, starts an election process.
 		if (ElectionManagerUtils.isCoordinatorDisabled() && !electionManagerInstance.isInElection()) {
-			System.out.println(String.format("[%s] Coordenador não respondeu, processo de Eleição iniciado!",
+			System.out.println(String.format("[%s] Coordenador nï¿½o respondeu, processo de Eleiï¿½ï¿½o iniciado!",
 					LocalDateTime.now()));
 			Node newCoordinator = startElection();
-			System.out.println(String.format("[%s] Processo de eleição finalizado, %s é o novo coordenador.",
+			System.out.println(String.format("[%s] Processo de eleiï¿½ï¿½o finalizado, %s ï¿½ o novo coordenador.",
 					LocalDateTime.now(), newCoordinator));
 			return newCoordinator;
 		} else {
@@ -43,17 +44,23 @@ public class Node {
 
 	private Node startElection() {
 		electionManagerInstance.isInElection = true;
-		// 1) P envia mensagem de eleição para todos os processos com IDs maiores
-		// 2) Se ninguém responde, P vence eleição e torna-se coordenador
+		// 1) P envia mensagem de eleiï¿½ï¿½o para todos os processos com IDs maiores
+		// 2) Se ninguï¿½m responde, P vence eleiï¿½ï¿½o e torna-se coordenador
 		// 3) Se algum processo com ID maior responde, ele desiste.
 		return getCoordinator(this);
 	}
 
+	public boolean sendMessage() {
+		return active;
+	};
+
 	private Node getCoordinator(Node actualNode) {
 		var aheadNodes = ElectionManagerUtils.getSortedList().stream().filter(n -> n.id > actualNode.id)
 				.collect(Collectors.toList());
-		// TODO: "send" a request to the others nodes, if someone responds, jump to the next node
-		if (aheadNodes.isEmpty()) {
+		var collected = aheadNodes.stream().map(n -> {
+			return n.sendMessage();
+		}).collect(Collectors.toList());
+		if (collected.isEmpty()) {
 			return this;
 		}
 		return getCoordinator(aheadNodes.get(0));
